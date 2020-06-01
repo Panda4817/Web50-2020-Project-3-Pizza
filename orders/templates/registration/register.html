@@ -1,0 +1,36 @@
+{% extends "orders/base.html" %}
+
+    {% block title %}
+        Register
+    {% endblock %}
+
+    {% block body %}
+
+    <section  class="ftco-about d-md-flex">
+        <div class="one-half img" style="background-image: url(static/orders/images/image_6.jpg);"></div>
+        <div class="one-half ftco-animate">
+        <div class="heading-section ftco-animate ">
+          <h2 class="mb-4">Register to order online</h2>
+        </div>
+            <div>
+                <form method="POST">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="form-group">
+                            {{ field.label_tag }}<br>
+                            {{ field }}<br>
+                            {% if field.help_text %}
+                            <small style="color: whitesmoke">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                            <small style="color: red">{{ error }}</small>
+                            {% endfor %}
+                    </div> 
+                    {% endfor %}
+                    <button class="btn btn-primary" type="submit">Register</button>
+                </form>  
+              </div>
+        </div>
+    </section>
+        
+    {% endblock %}

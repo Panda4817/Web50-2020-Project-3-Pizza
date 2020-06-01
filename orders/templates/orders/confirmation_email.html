@@ -1,0 +1,17 @@
+{% autoescape off %}
+Hi {{ user.username }},
+
+Your delicious order is confirmed!
+Order no: {{ order.id }}
+Total: ${{ order.total }}
+Payment type: {{ order.payment }}
+{{ order.delivery_type }}
+{{ order.delivery_intructions }}
+Note -  It may take upto maximum of 90 minutes. Please check your account page to see the status of your order.
+If you would like to amend any part of your order, please contact us ASAP.
+
+Thank you.
+
+Sincerely,
+Pinocchio's Pizza & Subs team
+{% endautoescape %}

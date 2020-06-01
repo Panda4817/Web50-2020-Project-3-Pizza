@@ -1,0 +1,375 @@
+{% extends 'orders/base.html' %}
+{% load static %}
+
+{% block title %}
+  Order Cart
+{% endblock %}
+
+{% block body %}
+<section class="ftco-menu">
+    <div class="container-fluid">
+        <div class="row d-md-flex">
+            <div class="col-lg-8 ftco-animate p-md-5">
+                <h2 class="mb-4">Your <span class="flaticon-pizza text-primary">rder</span></h2>
+                <table id="cartTable" class="table table-borderless table-hover ftco-bg-dark shadow-lg">
+                    <tbody id="cartbody">
+                        {% if cart %}
+                        {% for i in cart %}
+                        <tr id="row{{ i.id }}">
+                            <td>
+                                <span class="float-left text-primary" id="item{{ i.id }}">{{ i|title }}</span>
+                                <br>
+                                <span class="font-weight-lighter ml-3" id="extra{{ i.id }}">
+                                    {% if i.getfood_type == 'sub' %}
+                                        {% if i.get_extra == '' %}
+                                            No extras
+                                        {% else %}
+                                        - with extra {{ i.get_extra }}
+                                        {% endif %}
+                                    {% endif %}
+                                    {{ i.get_toppings }}
+                                </span>
+                            </td>
+                            <td>QTY: <span class="text-primary" id="cartqty{{ i.id }}"> {{ i.quantity }}</span>
+                                <span class="mx-auto">
+                                    <i class="fas fa-edit ml-5 btn btn-primary" data-toggle='modal' data-target="#food{{ i.id }}"></i>
+                                    <i class="fas fa-trash-alt ml-5 btn btn-primary" onclick="deleteItem('{{ i.id }}')"></i>
+                                </span>
+                            </td>
+                            <td class="text-right text-primary" id="price{{ i.id }}">${{ i.get_overall_price }}</td>
+                        </tr>
+                        
+                        {% endfor %}
+                        {% else %}
+                        <tr><td>No items added to order yet!</td></tr>
+                        {% endif %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-right">Total:&nbsp;
+                                {% if total %} 
+                                    <span class="font-weight-bold text-primary" id="cartTotal">${{ total }}</span>
+                                {% else %}
+                                    $0
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+                {% if user.address.email_confirmed == false %}
+                <p>Please confirm your email address to complete registration and place an order.</p>
+                {% elif cart %}
+                <button id="showprocess" class="btn btn-primary m-3 font-weight-bold" onclick="showPlaceOrder()">Checkout</button>
+                {% else %}
+                <div></div>
+                {% endif %}
+            </div>
+            <div class="col-lg-4 ftco-animate img f-menu-img p-md-5" style="background-image: url(static/orders/images/image_1.jpg);">
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="checkout" style="display: none;" class="ftco-bg-dark">
+    <div class="container-fluid">
+    <nav aria-label="breadcrumb" class="m-5">
+        <ol class="breadcrumb ml-5">
+        <li id="bdetails" class="breadcrumb-item active">Your Details</li>
+        <li id="btakeaway" class="breadcrumb-item">Delivery or Collection</li>
+        <li id="bpayment" class="breadcrumb-item">Confirm and Pay</li>
+        </ol>
+    </nav>
+    <form id="checkoutForm" action="/cash" method="POST">
+        {% csrf_token %}
+    <div class="row justify-content-center">
+        <div id="details" class="col-md-3">
+        {% for field in DetailsForm %}
+        <div class="form-group">
+                <span class="text-primary">{{ field.label_tag }}</span><br>
+                {{ field }}<br>
+                {% if field.help_text %}
+                <small style="color: whitesmoke">{{ field.help_text }}</small>
+                {% endif %}
+                {% for error in field.errors %}
+                <small style="color: red">{{ error }}</small>
+                {% endfor %}
+        </div> 
+        {% endfor %}
+        <div class="btn btn-primary m-3 font-weight-bold" onclick="showTakeawayDiv(this), showPdiv()">Proceed</div>   
+        </div>
+                <div id="takeaway" style="display: none;" class="col-md-3">
+                {% for field in DeliveryForm %}
+                <div class="form-group">
+                    <span class="text-primary">{{ field.label_tag }}</span><br>
+                        {{ field }}<br>
+                        {% if field.help_text %}
+                        <small style="color: whitesmoke">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                        <small style="color: red">{{ error }}</small>
+                        {% endfor %}
+                </div> 
+            {% endfor %}
+            <small id="delivery" style="display: none; color: whitesmoke;">Please note we aim to deliver between 30 to 90 minutes after placing the order.
+                This depends on time of day, traffic and distance.
+                We will notify you when your order is out for delivery via email and/or telephone.
+                Alternatively, check your account page for the status of you order.
+            </small>
+            <small id="collection" style="display: none; color: whitesmoke;">Please note your collection will be ready in 30 to 90 minutes after placing the order.
+                We will notify you when your order is ready to collect via email and/or telephone.
+                Alternatively, check your account page for the status of you order.
+                You are welcome to wait in the restaurent waiting area.
+            </small>
+            <div class="btn btn-primary m-3 font-weight-bold" onclick="showPaymentDiv(this)">Proceed</div>
+            </div>
+            <div id="payment" style="display: none;" class="col-md-4">
+                
+                {% for field in PaymentTypeForm %}
+                <div class="form-check">
+                    <span class="text-primary">{{ field.label_tag }}</span><br>
+                    {{ field }}<br><br><br>
+                    {% if field.help_text %}
+                    <small style="color: whitesmoke;">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <small style="color: red">{{ error }}</small>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                <p class="m-3">Total:&nbsp;<span class="font-weight-bold text-primary">${{ total }}</span></p>
+            <button id="card" formaction="/card" type="submit"class="btn btn-primary m-3 font-weight-bold" style="display: none;">Confirm order and Pay</button>
+            <button id="cash" type="submit" class="btn btn-primary m-3 font-weight-bold" style="display: none;">Confirm order</button>
+            </div>
+            </div>
+    </div>
+        
+    </form>
+
+    </div>
+    
+</section>
+
+
+<section class="ftco-gallery">
+    <div class="container-wrap">
+        <div class="row no-gutters">
+            <div class="col-md-3 ftco-animate">
+                <div class="gallery img d-flex align-items-center" style="background-image: url(static/orders/images/gallery-1.jpg);">
+                </div>
+            </div>
+            <div class="col-md-3 ftco-animate">
+                <div class="gallery img d-flex align-items-center" style="background-image: url(static/orders/images/gallery-2.jpg);">
+                </div>
+            </div>
+            <div class="col-md-3 ftco-animate">
+                <div class="gallery img d-flex align-items-center" style="background-image: url(static/orders/images/gallery-3.jpg);">
+                </div>
+            </div>
+            <div class="col-md-3 ftco-animate">
+                <div class="gallery img d-flex align-items-center" style="background-image: url(static/orders/images/gallery-4.jpg);">   
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<section class="ftco-counter ftco-bg-dark img" id="section-counter" style="background-image: url(static/orders/images/bg_2.jpg);" data-stellar-background-ratio="0.5">
+    <div class="overlay"></div>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="row">
+                    <div class="col-md-6 col-lg-3 d-flex justify-content-center counter-wrap ftco-animate">
+                        <div class="block-18 text-center">
+                            <div class="text">
+                                <div class="icon"><span class="flaticon-pizza-1"></span></div>
+                                <strong class="number" data-number="100">0</strong>
+                                <span>Pizza Branches</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 d-flex justify-content-center counter-wrap ftco-animate">
+                        <div class="block-18 text-center">
+                            <div class="text">
+                                <div class="icon"><span class="flaticon-medal"></span></div>
+                                <strong class="number" data-number="85">0</strong>
+                                <span>Number of Awards</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 d-flex justify-content-center counter-wrap ftco-animate">
+                        <div class="block-18 text-center">
+                            <div class="text">
+                                <div class="icon"><span class="flaticon-laugh"></span></div>
+                                <strong class="number" data-number="10567">0</strong>
+                                <span>Happy Customer</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 d-flex justify-content-center counter-wrap ftco-animate">
+                        <div class="block-18 text-center">
+                            <div class="text">
+                                <div class="icon"><span class="flaticon-chef"></span></div>
+                                <strong class="number" data-number="900">0</strong>
+                                <span>Staff</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if cart %}
+{% for i in cart %}
+<div class="modal fade" id="food{{ i.id }}">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">{{ i|title }}</h4>
+          <button type="button" class="close btn btn-primary" data-dismiss="modal">&times;</button>
+        </div>
+      <!-- Modal body -->
+        <div class="modal-body">
+            <form action="{% url 'update_cart' %}" method="POST" onsubmit="updateCart('{{ i.id }}'); return false;" id="form{{ i.id }}">
+                {% csrf_token %}
+        {% if 'pizza' in i.food_item.food_type.name %}
+          {% if '1' in i.food_item.name %}
+            <div class="form-group">
+              <label for="topping1">Select your topping:</label>
+              <select class="form-control" id="topping1{{ i.id }}" required>
+                <option value=""  selected disabled hidden>Select topping</option>
+              {% for topping in toppings %}
+                <option value="{{ topping }}">{{ topping }}</option>
+              {% endfor %}
+              </select>
+            </div>
+            {% endif %}
+            {% if '2' in i.food_item.name %}
+            <div class="form-group">
+              <label for="topping1">Select topping 1:</label>
+              <select class="form-control" id="topping1{{ i.id }}" required>
+                <option value="" selected disabled hidden>Select topping 1</option>
+              {% for topping in toppings %}
+                <option value="{{ topping }}">{{ topping }}</option>
+              {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="topping2">Select topping 2:</label>
+              <select class="form-control" id="topping2{{ i.id }}" required>
+                <option value=""  selected disabled hidden>Select topping 2</option>
+              {% for topping in toppings %}
+                <option value="{{ topping }}">{{ topping }}</option>
+              {% endfor %}
+              </select>
+            </div>
+            {% endif %}
+            {% if '3' in i.food_item.name %}
+            <div class="form-group">
+              <label for="topping1">Select topping 1:</label>
+              <select class="form-control" id="topping1{{ i.id }}" required>
+                <option value=""  selected disabled hidden>Select topping 1</option>
+              {% for topping in toppings %}
+                <option value="{{ topping }}">{{ topping }}</option>
+              {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="topping2">Select topping 2:</label>
+              <select class="form-control" id="topping2{{ i.id }}" required>
+                <option value=""  selected disabled hidden>Select topping 2</option>
+              {% for topping in toppings %}
+                <option value="{{ topping }}">{{ topping }}</option>
+              {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="topping3">Select topping 3:</label>
+              <select class="form-control" id="topping3{{ i.id }}" required>
+                <option value=""  selected disabled hidden>Select topping 3</option>
+              {% for topping in toppings %}
+                <option value="{{ topping }}">{{ topping }}</option>
+              {% endfor %}
+              </select>
+            </div>
+            {% endif %}
+        {% endif %}
+        {% if 'sub' in i.food_item.food_type.name %}
+          <legend>Add extra(s):</legend>
+          {% if i.food_item.extraOTC == True %}
+            {% for extra in extras %}
+            <div class="form-check">
+                <label class="form-check-label">
+                <input type="checkbox" class="form-check-input" name="extra{{ i.id }}[]" value="{{ extra.name }}">
+                {{ extra }}
+                </label>
+            </div>
+            {% endfor %}
+          {% else %}
+          <div class="form-check">
+            <label class="form-check-label">
+              <input type="checkbox" class="form-check-input" name="extra{{ i.id }}[]" value="cheese">
+              cheese for $0.50
+            </label>
+          </div>
+          {% endif %}
+        {% endif %}
+        <legend>Quantity:</legend>
+        <div class="form-group row">
+          <i onclick="minusQuantity(this)"class="fas fa-minus"></i>
+          <div class="col-2">
+            <input min="1" name="quantity{{ i.id }}" id="quantity{{ i.id }}" value="{{ i.quantity }}" type="number" class="form-control">
+          </div>
+          <i onclick="addQuantity(this)"class="fas fa-plus"></i>
+        </div>
+        </div>
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-white btn-outline-white">Update Cart</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+
+
+<script>
+    function deleteItem(data) {
+    $.ajax({
+        type: "POST",
+        url: '/delete_item_cart',
+        data: { 
+            'OrderToFood_id': data,
+        },
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+    })
+    .done(function(data) {
+        document.getElementById('row'+data.id).remove();
+        document.getElementById('navcart'+data.id).remove();
+        var total = document.getElementById('cartTotal');
+        total.innerHTML = '$'+data.total;
+        document.getElementById('items').innerHTML = data.total_qty;
+        document.getElementById('total').innerHTML = '$'+data.total;
+        var cart_table = document.querySelector('#cartbody').children;
+        if (cart_table.length == 0) {
+            document.getElementById('showprocess').style.display = 'none';
+            var tr = document.createElement('tr');
+            var td = document.createElement('td');
+            td.innerHTML = 'No items added to order yet!';
+            tr.append(td);
+            cart_table.append(tr);
+        }
+        checkNavCart();
+    })
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'orders/base.html' %}
+{% load static %}
+
+{% block title %}
+   Staff
+{% endblock %}
+
+{% block body %}
+<div class="container p-3">
+    <div class="row">
+        <div class="col-1 float-left m-3" >
+            <i class="fas fa-user text-primary" style="font-size: 100px;"></i>
+        </div>
+        <div class="col-10 float-right m-3">
+            <h2>Staff name: <span class="text-primary">{{ request.user.get_full_name }}</span></h2>
+            <h2>Id No: <span class="text-primary">{{ request.user.id }}</span></h2>
+        </div>
+    </div>
+</div>
+
+<section class="ftco-section staff-section">
+    <div class="container-wrap p-3">
+        <div class="row no-gutters d-flex justify-content-center">
+            
+            {% for order in orders %}
+            <div class="col-lg-3 d-flex ftco-animate ftco-bg-dark m-1 justify-content-center" id="order{{ order.id }}">
+                <div class="services-wrap d-flex">
+                    <div class="text p-4">
+                        <div>
+                            <h3 class="text-center float-left" id="header{{ order.id }}">Order no: <span class="text-primary">{{ order.id }}</span></h3>
+                            <button id="orderBtn{{ order.id }}" type="button" style="font-size: larger;"class="btn btn-primary float-right px-3 ml-3 font-weight-bold" onclick="closeOrder('{{ order.id }}')">&times;</button>
+                        </div><br><br>
+                        <div id="toggle{{ order.id }}">
+                        <h2 class="text-center">Status:<br> <span class="text-primary" id="status{{ order.id }}">{{ order.status|title }}</span></h2>
+                        <p>Order placed: <span class="time text-primary">{{ order.timestamp }}</span></p>
+                        <p>type: <span class="text-primary">{{ order.delivery_type }} {{ order.delivery_instructions }}</span></p>
+                        <p>Payment: <span class="text-primary">{{ order.payment }}</span></p>
+                        <button type="button" class="btn btn-primary float-xl-left mb-3" onclick="customer('{{ order.id }}')">Customer Info</button>
+                        &nbsp;
+                        <button type="button" class="btn btn-primary float-xl-right mb-3" onclick="orderInfo('{{ order.id }}')">Order Info</button>
+                        <br><br>
+                        <p id="customer{{ order.id }}" style="display: none;">Name: <span class="text-primary">{{ order.name }}<br></span>
+                            Email and/or Tel: <span class="text-primary">{{ order.email }} {{ order.tel }}</span><br>
+                            Address:<br> <span class="text-primary">{{ order.address_street_1 }}<br>
+                            {% if order.address_street_2 != '' %} {{ order.address_street_2 }}<br>{% endif %}
+                            {{ order.city }}<br>
+                            {{ order.post_code }}</span>
+                        </p>
+                        <table id="orderInfo{{ order.id }}" class="table table-borderless ftco-bg-dark shadow-lg" style="display: none;">
+                            <tbody>
+                                {% for i in order.orderfood %}
+                                <tr>
+                                    <td>
+                                        <span class="float-left text-primary">{{ i|title }}</span>
+                                        <br>
+                                        <span class="font-weight-lighter ml-3">
+                                            {% if i.getfood_type == 'sub' %}
+                                            - with extra {{ i.get_extra|default:'no extras' }}
+                                            {% endif %}
+                                            {{ i.get_toppings }}
+                                        </span>
+                                    </td>
+                                    <td>QTY: <span class="text-primary"> {{ i.quantity }}</span>
+                                    </td>
+                                    <td class="text-right text-primary">${{ i.get_overall_price }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-right">Total:&nbsp;<span class="font-weight-bold text-primary">${{ order.total }}</span>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                          <form id="form{{ order.id }}" action="{% url 'staff' %}" method="POST" onsubmit="changeStatus('{{ order.id }}'); return false;">
+                            {% csrf_token %}
+                            {% for field in ChangeStatusForm %}
+                            <div class="form-group">
+                                <span class="text-primary">{{ field.label_tag }}</span>
+                                {{ field }}
+                                {% for error in field.errors %}
+                                <small style="color: red">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                            <button type="submit" class="btn btn-primary">Update Status</button>
+                          </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        
+        </div>
+    </div>
+</section>
+
+{% endblock %}
