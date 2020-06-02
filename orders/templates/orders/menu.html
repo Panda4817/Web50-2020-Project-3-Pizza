@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-  Menu
+Menu
 {% endblock %}
 
 {% block body %}
@@ -13,11 +13,11 @@
       <div class="row slider-text justify-content-center align-items-center">
         <div class="col-md-7 col-sm-12 text-center ftco-animate">
           <h1 class="mb-3 mt-5 bread">Our Menu</h1>
-          <p class="breadcrumbs"><span class="mr-2"><a href="/">Home</a></span> <span>Menu</span></p>
+          <p class="breadcrumbs"><span class="mr-2"><a href="{% url 'index' %}">Home</a></span> <span>Menu</span></p>
           <p id="menu-nav">
             {% for type in types %}
-                <a href="#{{ type }}">{{ type|title }}</a><br>
-            {% endfor %}  
+            <a href="#{{ type }}">{{ type|title }}</a><br>
+            {% endfor %}
           </p>
         </div>
       </div>
@@ -30,119 +30,122 @@
   <div class="row justify-content-center mb-5 pb-3 mt-5 pt-5">
     <div class="col-md-7 heading-section text-center ftco-animate">
       <h2 class="mb-4" style="cursor: pointer;" onclick="myShow('{{ typ|cut:' ' }}')">
-        <i id="btn{{ typ|cut:' ' }}"  class="float-left fas fa-chevron-right"></i> 
+        <i id="btn{{ typ|cut:' ' }}" class="float-left fas fa-chevron-right"></i>
         {{ typ|title }}
       </h2>
       <p class="flip"><span class="deg1"></span><span class="deg2"></span><span class="deg3"></span></p>
     </div>
   </div>
   <div id="row{{ typ|cut:' ' }}" class="row" style="display: none;">
-  {% for k, v in dictfood.items %}
+    {% for k, v in dictfood.items %}
     {% if k == typ %}
-    
-    <div class="col-md-6">    
-    {% for i in v %}
-      {% if i.size.name == 'small' %}             
-        <div class="pricing-entry d-flex ftco-animate">
-          <div class="img" style="background-image: url({% static 'orders/images/'|add:typ|add:'.jpg' %});"></div>
-          <div class="desc pl-3">
-            <div class="d-flex text align-items-center">
-              <h3><span>{{ i.size|title }} {{ i.name|title }}</span></h3>
-              <span class="price">${{ i.price }}</span>
-            </div>
-            <div class="d-block">
-              {% if i.name == 'special' %}
-              This months world themed pizza is Indian curry with tandoori chicken, red peppers, onion, mango chutney and spicy masala base.
-              {% endif %}
-              {% if user.is_authenticated %}
-              <p><button data-toggle="modal" data-target="#food{{ i.id }}" class="btn btn-white btn-outline-white">Add to cart</button></p>
-              {% endif %}
-            </div>
+
+    <div class="col-md-6">
+      {% for i in v %}
+      {% if i.size.name == 'small' %}
+      <div class="pricing-entry d-flex ftco-animate">
+        <div class="img" style="background-image: url({% static 'orders/images/'|add:typ|add:'.jpg' %});"></div>
+        <div class="desc pl-3">
+          <div class="d-flex text align-items-center">
+            <h3><span>{{ i.size|title }} {{ i.name|title }}</span></h3>
+            <span class="price">${{ i.price }}</span>
+          </div>
+          <div class="d-block">
+            {% if i.name == 'special' %}
+            This months world themed pizza is Indian curry with tandoori chicken, red peppers, onion, mango chutney and
+            spicy masala base.
+            {% endif %}
+            {% if user.is_authenticated %}
+            <p><button data-toggle="modal" data-target="#food{{ i.id }}" class="btn btn-white btn-outline-white">Add to
+                cart</button></p>
+            {% endif %}
           </div>
         </div>
-                  
-        <!-- The Modal -->
-        <div class="modal fade" id="food{{ i.id }}">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <!-- Modal Header -->
-              <div class="modal-header">
-                <h4 class="modal-title">{{ i.size|title }} {{ i.name|title }} {{ typ|title }}</h4>
-                <button type="button" class="close btn btn-primary" data-dismiss="modal">&times;</button>
-              </div>
+      </div>
+
+      <!-- The Modal -->
+      <div class="modal fade" id="food{{ i.id }}">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+              <h4 class="modal-title">{{ i.size|title }} {{ i.name|title }} {{ typ|title }}</h4>
+              <button type="button" class="close btn btn-primary" data-dismiss="modal">&times;</button>
+            </div>
             <!-- Modal body -->
-            <form action="{% url 'menu' %}" method="POST" onsubmit="cartFunction('{{ i.id }}'); return false;" id="form{{ i.id }}">
+            <form action="{% url 'menu' %}" method="POST" onsubmit="cartFunction('{{ i.id }}'); return false;"
+              id="form{{ i.id }}">
               {% csrf_token %}
               <div class="modal-body">
-              {% if 'pizza' in typ %}
+                {% if 'pizza' in typ %}
                 {% if '1' in i.name %}
-                  <div class="form-group">
-                    <label for="topping1">Select your topping:</label>
-                    <select class="form-control" id="topping1{{ i.id }}" required>
-                      <option value=""  selected disabled hidden>Select topping</option>
+                <div class="form-group">
+                  <label for="topping1">Select your topping:</label>
+                  <select class="form-control" id="topping1{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping</option>
                     {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
+                    <option value="{{ topping }}">{{ topping }}</option>
                     {% endfor %}
-                    </select>
-                  </div>
-                  {% endif %}
-                  {% if '2' in i.name %}
-                  <div class="form-group">
-                    <label for="topping1">Select topping 1:</label>
-                    <select class="form-control" id="topping1{{ i.id }}" required>
-                      <option value="" selected disabled hidden>Select topping 1</option>
+                  </select>
+                </div>
+                {% endif %}
+                {% if '2' in i.name %}
+                <div class="form-group">
+                  <label for="topping1">Select topping 1:</label>
+                  <select class="form-control" id="topping1{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping 1</option>
                     {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
+                    <option value="{{ topping }}">{{ topping }}</option>
                     {% endfor %}
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="topping2">Select topping 2:</label>
-                    <select class="form-control" id="topping2{{ i.id }}" required>
-                      <option value=""  selected disabled hidden>Select topping 2</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="topping2">Select topping 2:</label>
+                  <select class="form-control" id="topping2{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping 2</option>
                     {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
+                    <option value="{{ topping }}">{{ topping }}</option>
                     {% endfor %}
-                    </select>
-                  </div>
-                  {% endif %}
-                  {% if '3' in i.name %}
-                  <div class="form-group">
-                    <label for="topping1">Select topping 1:</label>
-                    <select class="form-control" id="topping1{{ i.id }}" required>
-                      <option value=""  selected disabled hidden>Select topping 1</option>
+                  </select>
+                </div>
+                {% endif %}
+                {% if '3' in i.name %}
+                <div class="form-group">
+                  <label for="topping1">Select topping 1:</label>
+                  <select class="form-control" id="topping1{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping 1</option>
                     {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
+                    <option value="{{ topping }}">{{ topping }}</option>
                     {% endfor %}
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="topping2">Select topping 2:</label>
-                    <select class="form-control" id="topping2{{ i.id }}" required>
-                      <option value=""  selected disabled hidden>Select topping 2</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="topping2">Select topping 2:</label>
+                  <select class="form-control" id="topping2{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping 2</option>
                     {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
+                    <option value="{{ topping }}">{{ topping }}</option>
                     {% endfor %}
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="topping3">Select topping 3:</label>
-                    <select class="form-control" id="topping3{{ i.id }}" required>
-                      <option value=""  selected disabled hidden>Select topping 3</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="topping3">Select topping 3:</label>
+                  <select class="form-control" id="topping3{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping 3</option>
                     {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
+                    <option value="{{ topping }}">{{ topping }}</option>
                     {% endfor %}
-                    </select>
-                  </div>
-                  {% endif %}
-              {% endif %}
-              {% if 'sub' in typ %}
+                  </select>
+                </div>
+                {% endif %}
+                {% endif %}
+                {% if 'sub' in typ %}
                 <legend>Add extra(s):</legend>
                 {% if i.extraOTC == True %}
                 {% for extra in extras %}
                 <div class="form-check">
                   <label class="form-check-label">
-                    <input type="checkbox" class="form-check-input" name="extra{{ i.id }}[]"value="{{ extra.name }}">
+                    <input type="checkbox" class="form-check-input" name="extra{{ i.id }}[]" value="{{ extra.name }}">
                     {{ extra }}
                   </label>
                 </div>
@@ -155,15 +158,16 @@
                   </label>
                 </div>
                 {% endif %}
-              {% endif %}
-              <legend>Quantity:</legend>
-              <div class="form-group row">
-                <i onclick="minusQuantity(this)"class="fas fa-minus"></i>
-                <div class="col-2">
-                  <input min="1" name="quantity{{ i.id }}" id="quantity{{ i.id }}" value="1" type="number" class="form-control">
+                {% endif %}
+                <legend>Quantity:</legend>
+                <div class="form-group row">
+                  <i onclick="minusQuantity(this)" class="fas fa-minus"></i>
+                  <div class="col-2">
+                    <input min="1" name="quantity{{ i.id }}" id="quantity{{ i.id }}" value="1" type="number"
+                      class="form-control">
+                  </div>
+                  <i onclick="addQuantity(this)" class="fas fa-plus"></i>
                 </div>
-                <i onclick="addQuantity(this)"class="fas fa-plus"></i>
-              </div>
               </div>
               <!-- Modal footer -->
               <div class="modal-footer">
@@ -174,12 +178,12 @@
         </div>
       </div>
       {% endif %}
-    {% endfor %}
+      {% endfor %}
     </div>
-                  
-    <div class="col-md-6">    
-    {% for i in v %}
-      {% if i.size.name == 'large' %}             
+
+    <div class="col-md-6">
+      {% for i in v %}
+      {% if i.size.name == 'large' %}
       <div class="pricing-entry d-flex ftco-animate">
         <div class="img" style="background-image: url({% static 'orders/images/'|add:typ|add:'.jpg' %});"></div>
         <div class="desc pl-3">
@@ -189,10 +193,12 @@
           </div>
           <div class="d-block">
             {% if i.name == 'special' %}
-            This months world themed pizza is Indian curry with tandoori chicken, red peppers, onion, mango chutney and spicy masala base.
+            This months world themed pizza is Indian curry with tandoori chicken, red peppers, onion, mango chutney and
+            spicy masala base.
             {% endif %}
             {% if user.is_authenticated %}
-            <p><button data-toggle="modal" data-target="#food{{ i.id }}" class="btn btn-white btn-outline-white">Add to cart</button></p>
+            <p><button data-toggle="modal" data-target="#food{{ i.id }}" class="btn btn-white btn-outline-white">Add to
+                cart</button></p>
             {% endif %}
           </div>
         </div>
@@ -206,210 +212,79 @@
               <h4 class="modal-title">{{ i.size }} {{ i.name }} {{ typ|title }}</h4>
               <button type="button" class="close btn btn-white btn-outline-white" data-dismiss="modal">&times;</button>
             </div>
-            <form action="{% url 'menu' %}" method="POST" onsubmit="cartFunction('{{ i.id }}'); return false;" id="form{{ i.id }}">
+            <form action="{% url 'menu' %}" method="POST" onsubmit="cartFunction('{{ i.id }}'); return false;"
+              id="form{{ i.id }}">
               {% csrf_token %}
               <div class="modal-body">
-              {% if 'pizza' in typ %}
+                {% if 'pizza' in typ %}
                 {% if '1' in i.name %}
-                  <div class="form-group">
-                    <label for="topping1">Select your topping:</label>
-                    <select class="form-control" id="topping1{{ i.id }}" required>
-                      <option value=""  selected disabled hidden>Select topping</option>
+                <div class="form-group">
+                  <label for="topping1">Select your topping:</label>
+                  <select class="form-control" id="topping1{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping</option>
                     {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
+                    <option value="{{ topping }}">{{ topping }}</option>
                     {% endfor %}
-                    </select>
-                  </div>
-                  {% endif %}
-                  {% if '2' in i.name %}
-                  <div class="form-group">
-                    <label for="topping1">Select topping 1:</label>
-                    <select class="form-control" id="topping1{{ i.id }}" required>
-                      <option value=""  selected disabled hidden>Select topping 1</option>
-                    {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
-                    {% endfor %}
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="topping2">Select topping 2:</label>
-                    <select class="form-control" id="topping2{{ i.id }}" required>
-                      <option value=""  selected disabled hidden>Select topping 2</option>
-                    {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
-                    {% endfor %}
-                    </select>
-                  </div>
-                  {% endif %}
-                  {% if '3' in i.name %}
-                  <div class="form-group">
-                    <label for="topping1">Select topping 1:</label>
-                    <select class="form-control" id="topping1{{ i.id }}" required>
-                      <option value=""  selected disabled hidden>Select topping 1</option>
-                    {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
-                    {% endfor %}
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="topping2">Select topping 2:</label>
-                    <select class="form-control" id="topping2{{ i.id }}" required>
-                      <option value=""  selected disabled hidden>Select topping 2</option>
-                    {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
-                    {% endfor %}
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="topping3">Select topping 3:</label>
-                    <select class="form-control" id="topping3{{ i.id }}" required>
-                      <option value=""  selected disabled hidden>Select topping 3</option>
-                    {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
-                    {% endfor %}
-                    </select>
-                  </div>
-                  {% endif %}
-              {% endif %}
-              {% if 'sub' in typ %}
-              <legend>Add extra(s):</legend>
-              {% if i.extraOTC == True %}
-              {% for extra in extras %}
-              <div class="form-check">
-                <label class="form-check-label">
-                  <input type="checkbox" class="form-check-input" name="extra{{ i.id }}[]"value="{{ extra.name }}">
-                  {{ extra }}
-                </label>
-              </div>
-              {% endfor %}
-              {% else %}
-              <div class="form-check">
-                <label class="form-check-label">
-                  <input type="checkbox" class="form-check-input" name="extra{{ i.id }}[]" value="cheese">
-                  cheese for $0.50
-                </label>
-              </div>
-                {% endif %}
-              {% endif %}
-              <legend>Quantity:</legend>
-              <div class="form-group row">
-                <i onclick="minusQuantity(this)"class="fas fa-minus"></i>
-                <div class="col-2">
-                  <input min="1" name="quantity{{ i.id }}" id="quantity{{ i.id }}" value="1" type="number" class="form-control">
+                  </select>
                 </div>
-                <i onclick="addQuantity(this)"class="fas fa-plus"></i>
-              </div>
-              </div>
-              <!-- Modal footer -->
-              <div class="modal-footer">
-                <button type="submit" class="btn btn-white btn-outline-white">Add to Cart</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-      {% endif %}
-    {% endfor %}
-    </div>
-    
-    <div class="col-md-6">    
-    {% for i in v %}
-      {% if i.size.name == 'standard' %}             
-      <div class="pricing-entry d-flex ftco-animate">
-        <div class="img" style="background-image: url({% static 'orders/images/'|add:typ|add:'.jpg' %});"></div>
-        <div class="desc pl-3">
-          <div class="d-flex text align-items-center">
-            <h3><span>{{ i.name|title }}</span></h3>
-            <span class="price">${{ i.price }}</span>
-          </div>
-          <div class="d-block">
-            {% if user.is_authenticated %}
-            <p><button data-toggle="modal" data-target="#food{{ i.id }}" class="btn btn-white btn-outline-white">Add to cart</button></p>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-      <!-- The Modal -->
-      <div class="modal fade" id="food{{ i.id }}">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <!-- Modal Header -->
-            <div class="modal-header">
-            <h4 class="modal-title">{{ i.name|title }} {{ typ|title }}</h4>
-            <button type="button" class="close btn btn-white btn-outline-white" data-dismiss="modal">&times;</button>
-            </div>
-            <form action="{% url 'menu' %}" method="POST" onsubmit="cartFunction('{{ i.id }}'); return false;" id="form{{ i.id }}">
-              {% csrf_token %}
-              <div class="modal-body">
-              {% if 'pizza' in typ %}
-                {% if '1' in i.name %}
-                  <div class="form-group">
-                    <label for="topping1">Select your topping:</label>
-                    <select class="form-control" id="topping1{{ i.id }}" required>
-                      <option value=""  selected disabled hidden>Select topping</option>
+                {% endif %}
+                {% if '2' in i.name %}
+                <div class="form-group">
+                  <label for="topping1">Select topping 1:</label>
+                  <select class="form-control" id="topping1{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping 1</option>
                     {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
+                    <option value="{{ topping }}">{{ topping }}</option>
                     {% endfor %}
-                    </select>
-                  </div>
-                  {% endif %}
-                  {% if '2' in i.name %}
-                  <div class="form-group">
-                    <label for="topping1">Select topping 1:</label>
-                    <select class="form-control" id="topping1{{ i.id }}" required>
-                      <option value="" selected disabled hidden>Select topping 1</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="topping2">Select topping 2:</label>
+                  <select class="form-control" id="topping2{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping 2</option>
                     {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
+                    <option value="{{ topping }}">{{ topping }}</option>
                     {% endfor %}
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="topping2">Select topping 2:</label>
-                    <select class="form-control" id="topping2{{ i.id }}" required>
-                      <option value=""  selected disabled hidden>Select topping 2</option>
+                  </select>
+                </div>
+                {% endif %}
+                {% if '3' in i.name %}
+                <div class="form-group">
+                  <label for="topping1">Select topping 1:</label>
+                  <select class="form-control" id="topping1{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping 1</option>
                     {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
+                    <option value="{{ topping }}">{{ topping }}</option>
                     {% endfor %}
-                    </select>
-                  </div>
-                  {% endif %}
-                  {% if '3' in i.name %}
-                  <div class="form-group">
-                    <label for="topping1">Select topping 1:</label>
-                    <select class="form-control" id="topping1{{ i.id }}" required>
-                      <option value=""  selected disabled hidden>Select topping 1</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="topping2">Select topping 2:</label>
+                  <select class="form-control" id="topping2{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping 2</option>
                     {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
+                    <option value="{{ topping }}">{{ topping }}</option>
                     {% endfor %}
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="topping2">Select topping 2:</label>
-                    <select class="form-control" id="topping2{{ i.id }}" required>
-                      <option value="" selected disabled hidden>Select topping 2</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="topping3">Select topping 3:</label>
+                  <select class="form-control" id="topping3{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping 3</option>
                     {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
+                    <option value="{{ topping }}">{{ topping }}</option>
                     {% endfor %}
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="topping3">Select topping 3:</label>
-                    <select class="form-control" id="topping3{{ i.id }}" required>
-                      <option value="" selected disabled hidden>Select topping 3</option>
-                    {% for topping in toppings %}
-                      <option value="{{ topping }}">{{ topping }}</option>
-                    {% endfor %}
-                    </select>
-                  </div>
-                  {% endif %}
-              {% endif %}
-              {% if 'sub' in typ %}
+                  </select>
+                </div>
+                {% endif %}
+                {% endif %}
+                {% if 'sub' in typ %}
                 <legend>Add extra(s):</legend>
                 {% if i.extraOTC == True %}
                 {% for extra in extras %}
                 <div class="form-check">
                   <label class="form-check-label">
-                    <input type="checkbox" class="form-check-input" name="extra{{ i.id }}[]"value="{{ extra.name }}">
+                    <input type="checkbox" class="form-check-input" name="extra{{ i.id }}[]" value="{{ extra.name }}">
                     {{ extra }}
                   </label>
                 </div>
@@ -422,15 +297,16 @@
                   </label>
                 </div>
                 {% endif %}
-              {% endif %}
-              <legend>Quantity:</legend>
-              <div class="form-group row">
-                <i onclick="minusQuantity(this)"class="fas fa-minus"></i>
-                <div class="col-2">
-                  <input min="1" name="quantity{{ i.id }}" id="quantity{{ i.id }}" value="1" type="number" class="form-control">
+                {% endif %}
+                <legend>Quantity:</legend>
+                <div class="form-group row">
+                  <i onclick="minusQuantity(this)" class="fas fa-minus"></i>
+                  <div class="col-2">
+                    <input min="1" name="quantity{{ i.id }}" id="quantity{{ i.id }}" value="1" type="number"
+                      class="form-control">
+                  </div>
+                  <i onclick="addQuantity(this)" class="fas fa-plus"></i>
                 </div>
-                <i onclick="addQuantity(this)"class="fas fa-plus"></i>
-              </div>
               </div>
               <!-- Modal footer -->
               <div class="modal-footer">
@@ -441,12 +317,147 @@
         </div>
       </div>
       {% endif %}
-    {% endfor %}
+      {% endfor %}
+    </div>
+
+    <div class="col-md-6">
+      {% for i in v %}
+      {% if i.size.name == 'standard' %}
+      <div class="pricing-entry d-flex ftco-animate">
+        <div class="img" style="background-image: url({% static 'orders/images/'|add:typ|add:'.jpg' %});"></div>
+        <div class="desc pl-3">
+          <div class="d-flex text align-items-center">
+            <h3><span>{{ i.name|title }}</span></h3>
+            <span class="price">${{ i.price }}</span>
+          </div>
+          <div class="d-block">
+            {% if user.is_authenticated %}
+            <p><button data-toggle="modal" data-target="#food{{ i.id }}" class="btn btn-white btn-outline-white">Add to
+                cart</button></p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <!-- The Modal -->
+      <div class="modal fade" id="food{{ i.id }}">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+              <h4 class="modal-title">{{ i.name|title }} {{ typ|title }}</h4>
+              <button type="button" class="close btn btn-white btn-outline-white" data-dismiss="modal">&times;</button>
+            </div>
+            <form action="{% url 'menu' %}" method="POST" onsubmit="cartFunction('{{ i.id }}'); return false;"
+              id="form{{ i.id }}">
+              {% csrf_token %}
+              <div class="modal-body">
+                {% if 'pizza' in typ %}
+                {% if '1' in i.name %}
+                <div class="form-group">
+                  <label for="topping1">Select your topping:</label>
+                  <select class="form-control" id="topping1{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping</option>
+                    {% for topping in toppings %}
+                    <option value="{{ topping }}">{{ topping }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                {% endif %}
+                {% if '2' in i.name %}
+                <div class="form-group">
+                  <label for="topping1">Select topping 1:</label>
+                  <select class="form-control" id="topping1{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping 1</option>
+                    {% for topping in toppings %}
+                    <option value="{{ topping }}">{{ topping }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="topping2">Select topping 2:</label>
+                  <select class="form-control" id="topping2{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping 2</option>
+                    {% for topping in toppings %}
+                    <option value="{{ topping }}">{{ topping }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                {% endif %}
+                {% if '3' in i.name %}
+                <div class="form-group">
+                  <label for="topping1">Select topping 1:</label>
+                  <select class="form-control" id="topping1{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping 1</option>
+                    {% for topping in toppings %}
+                    <option value="{{ topping }}">{{ topping }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="topping2">Select topping 2:</label>
+                  <select class="form-control" id="topping2{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping 2</option>
+                    {% for topping in toppings %}
+                    <option value="{{ topping }}">{{ topping }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="topping3">Select topping 3:</label>
+                  <select class="form-control" id="topping3{{ i.id }}" required>
+                    <option value="" selected disabled hidden>Select topping 3</option>
+                    {% for topping in toppings %}
+                    <option value="{{ topping }}">{{ topping }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                {% endif %}
+                {% endif %}
+                {% if 'sub' in typ %}
+                <legend>Add extra(s):</legend>
+                {% if i.extraOTC == True %}
+                {% for extra in extras %}
+                <div class="form-check">
+                  <label class="form-check-label">
+                    <input type="checkbox" class="form-check-input" name="extra{{ i.id }}[]" value="{{ extra.name }}">
+                    {{ extra }}
+                  </label>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="form-check">
+                  <label class="form-check-label">
+                    <input type="checkbox" class="form-check-input" name="extra{{ i.id }}[]" value="cheese">
+                    cheese for $0.50
+                  </label>
+                </div>
+                {% endif %}
+                {% endif %}
+                <legend>Quantity:</legend>
+                <div class="form-group row">
+                  <i onclick="minusQuantity(this)" class="fas fa-minus"></i>
+                  <div class="col-2">
+                    <input min="1" name="quantity{{ i.id }}" id="quantity{{ i.id }}" value="1" type="number"
+                      class="form-control">
+                  </div>
+                  <i onclick="addQuantity(this)" class="fas fa-plus"></i>
+                </div>
+              </div>
+              <!-- Modal footer -->
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-white btn-outline-white">Add to Cart</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
     </div>
 
     {% endif %}
-  {% endfor %}
-        
+    {% endfor %}
+
   </div>
 </div>
 {% endfor %}

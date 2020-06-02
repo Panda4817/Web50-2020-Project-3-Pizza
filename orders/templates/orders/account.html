@@ -1,7 +1,7 @@
 {% extends 'orders/base.html' %}
-
+{% load static %}
 {% block title %}
-   Account
+Account
 {% endblock %}
 
 {% block body %}
@@ -12,7 +12,9 @@
       <div class="row slider-text justify-content-center align-items-center">
         <div class="col-md-7 col-sm-12 text-center ftco-animate">
           <h1 class="mb-3 mt-5 bread">Account Page</h1>
-          <p class="breadcrumbs"><span class="mr-2"><a href="/">Home</a></span> <span>Account</span></p>
+          <p class="breadcrumbs"><span class="mr-2"><a href="{% url 'index' %}">Home</a></span> 
+            <span>Account</span>
+          </p>
         </div>
       </div>
     </div>
@@ -29,15 +31,16 @@
       <p>Name: <span style="color: whitesmoke;">{{ user.get_full_name }}</span></p>
       <p>Email: <span style="color: whitesmoke;">{{ user.email }}</span></p>
       {% if user.address.email_confirmed == false %}
-      <p style="color: whitesmoke;">Email NOT confirmed. Check your inbox/spam folder and confirm email by clicking on the link.</p>
+      <p style="color: whitesmoke;">Email NOT confirmed. Check your inbox/spam folder and confirm email by clicking on
+        the link.</p>
       {% else %}
       <p>Email Confirmed</p>
       {% endif %}
       <p>
         Delivery address:<br><span style="color: whitesmoke;">
-        {{ user.address.street_address_1 }}, {{ user.address.street_address_2 }}<br>
-        {{ user.address.city }}<br>
-        {{ user.address.post_code }}</span>
+          {{ user.address.street_address_1 }}, {{ user.address.street_address_2 }}<br>
+          {{ user.address.city }}<br>
+          {{ user.address.post_code }}</span>
       </p>
       {% if user.address.tel %}
       <p>Tel: <span style="color: whitesmoke;">{{ user.address.tel }}</span></p>
@@ -45,8 +48,8 @@
       <p>No telephone number provided yet</p>
       {% endif %}
       <p>Status: <span style="color: whitesmoke;">
-        {% if request.user.is_staff %} Staff & Customer {% else %} Customer {% endif %}
-      </span></p>
+          {% if request.user.is_staff %} Staff & Customer {% else %} Customer {% endif %}
+        </span></p>
     </div>
   </div>
 </section>
@@ -60,7 +63,7 @@
       <ul>
         <li><a href="password_change">Password</a></li>
         <br>
-        If you want to change the following, you can do so during the checkout process or contact us.
+        If you want to change other details(listed below), you can do so during the checkout process or contact us.
         <li>Name</li>
         <li>Email</li>
         <li>Delivery address</li>
@@ -83,65 +86,66 @@
       <p><span style="color: whitesmoke;">{{ order.delivery_type|title }}</span> in 30-90 minutes</p>
       <P>Payment method: <span style="color: whitesmoke;">{{ order.payment }}</span>
         {% if order.payment == 'cash' %}
-         STILL TO PAY
+        STILL TO PAY
         {% else %}
-         PAID ONLINE
+        PAID ONLINE
         {% endif %}
       </P>
       <table class="table table-borderless ftco-bg-dark shadow-lg">
         <tbody>
-            {% for i in orderfood %}
-            <tr>
-                <td>
-                    <span class="float-left text-primary">{{ i|title }}</span>
-                    <br>
-                    <span class="font-weight-lighter ml-3">
-                        {% if i.getfood_type == 'sub' %}
-                        - with extra {{ i.get_extra|default:'no extras' }}
-                        {% endif %}
-                        {{ i.get_toppings }}
-                    </span>
-                </td>
-                <td>QTY: <span class="text-primary"> {{ i.quantity }}</span>
-                </td>
-                <td class="text-right text-primary">${{ i.get_overall_price }}</td>
-            </tr>
-            {% endfor %}
+          {% for i in orderfood %}
+          <tr>
+            <td>
+              <span class="float-left text-primary">{{ i|title }}</span>
+              <br>
+              <span class="font-weight-lighter ml-3">
+                {% if i.getfood_type == 'sub' %}
+                - with extra {{ i.get_extra|default:'no extras' }}
+                {% endif %}
+                {{ i.get_toppings }}
+              </span>
+            </td>
+            <td>QTY: <span class="text-primary"> {{ i.quantity }}</span>
+            </td>
+            <td class="text-right text-primary">${{ i.get_overall_price }}</td>
+          </tr>
+          {% endfor %}
         </tbody>
         <tfoot>
-            <tr>
-                <td colspan="3" class="text-right">Total:&nbsp;<span class="font-weight-bold text-primary">${{ order.total }}</span>
-                </td>
-            </tr>
+          <tr>
+            <td colspan="3" class="text-right">Total:&nbsp;<span
+                class="font-weight-bold text-primary">${{ order.total }}</span>
+            </td>
+          </tr>
         </tfoot>
-    </table>
+      </table>
     </div>
   </div>
   <div id="progress" class="one-half">
-    <div class="row justify-content-center text-center m-1"> 
+    <div class="row justify-content-center text-center m-1">
       <div class="col">
         Check back later or reload the page to see your order progress
       </div>
     </div>
     <div class="row justify-content-start text-center">
-        <div id="confirmed" class="col-2 text-center progress-icon" style="visibility: hidden;">
-          <i class="far fa-smile"></i>
-        </div>
-        <div class="col-10 text-center progress-text" id="confirmed-text" style="visibility: hidden;">
-          <p>Order Confirmed</p> 
-        </div>
+      <div id="confirmed" class="col-2 text-center progress-icon" style="visibility: hidden;">
+        <i class="far fa-smile"></i>
+      </div>
+      <div class="col-10 text-center progress-text" id="confirmed-text" style="visibility: hidden;">
+        <p>Order Confirmed</p>
+      </div>
     </div>
     <div class="row justify-content-start text-center">
-        <div id="preparing1" class="col-2 text-center progress-icon" style="visibility: hidden;">
-          <span class="flaticon-chef"></span>
-        </div>
-        <div class="col-10 text-center progress-text" id="prep1-text" style="visibility: hidden;">
-          <p>Preparing order</p>
-        </div>
+      <div id="preparing1" class="col-2 text-center progress-icon" style="visibility: hidden;">
+        <span class="flaticon-chef"></span>
+      </div>
+      <div class="col-10 text-center progress-text" id="prep1-text" style="visibility: hidden;">
+        <p>Preparing order</p>
+      </div>
     </div>
     <div class="row justify-content-start text-center">
       <div class="col-2 text-center progress-icon" id="preparing2" style="visibility: hidden;">
-        <i  class="fas fa-cocktail"></i>
+        <i class="fas fa-cocktail"></i>
       </div>
       <div class="col-10 text-center progress-text" id="prep2-text" style="visibility: hidden;">
         <p>Grab a cocktail or mocktail and relax</p>
@@ -149,7 +153,7 @@
     </div>
     <div class="row justify-content-start text-center">
       <div class="col-2 text-center progress-icon" id="preparing3" style="visibility: hidden;">
-        <i  class="fas fa-wine-glass-alt"></i>
+        <i class="fas fa-wine-glass-alt"></i>
       </div>
       <div class="col-10 text-center progress-text" id="prep3-text" style="visibility: hidden;">
         <p>Find a nice wine or smoothie to go with your delicious order</p>
@@ -165,7 +169,7 @@
     </div>
     <div class="row justify-content-start text-center">
       <div class="col-2 text-center progress-icon" id="out1" style="visibility: hidden;">
-        <i  class="fas fa-hamburger"></i>
+        <i class="fas fa-hamburger"></i>
       </div>
       <div class="col-10 text-center progress-text" id="out1-text" style="visibility: hidden;">
         {% if order.delivery_type == 'delivery' %}
@@ -184,16 +188,16 @@
       </div>
     </div>
     <div class="row justify-content-start text-center">
-        <div class="col-2 text-center progress-icon" id="done" style="visibility: hidden;">
-          <i class="far fa-laugh-beam"></i>
-        </div>
-        <div class="col-10 text-center progress-text" id="done-text" style="visibility: hidden;">
-          {% if order.delivery_type == 'delivery' %}
-          <p>Delivered! Enjoy your food</p>
-          {% else %}
-          <p>Collected! Enjoy your food</p>
-          {% endif %}
-        </div>  
+      <div class="col-2 text-center progress-icon" id="done" style="visibility: hidden;">
+        <i class="far fa-laugh-beam"></i>
+      </div>
+      <div class="col-10 text-center progress-text" id="done-text" style="visibility: hidden;">
+        {% if order.delivery_type == 'delivery' %}
+        <p>Delivered! Enjoy your food</p>
+        {% else %}
+        <p>Collected! Enjoy your food</p>
+        {% endif %}
+      </div>
     </div>
   </div>
 </section>
@@ -211,60 +215,68 @@
   <div class="container-wrap p-3">
     <div class="row no-gutters d-flex justify-content-center">
       <h2>Your Previous <span class="flaticon-pizza text-primary">rder(s)</span>:</h2>
-    </div> 
+    </div>
     <div class="row no-gutters d-flex justify-content-center">
-          {% if prev_orders|length > 0 %}
-          {% for order in prev_orders %}
-          <div class="col-lg-3 d-flex ftco-animate ftco-bg-dark m-1 justify-content-center" id="order{{ order.porder.id }}">
-              <div class="services-wrap d-flex">
-                  <div class="text p-4">
-                      <div>
-                          <h3 class="text-center float-left" id="header{{ order.porder.id }}">Order no: <span class="text-primary">{{ order.porder.id }}</span></h3>
-                          <button id="orderBtn{{ order.porder.id }}" type="button" style="font-size: larger;"class="btn btn-primary float-right px-3 ml-3 font-weight-bold" onclick="closeOrder('{{ order.porder.id }}')">&times;</button>
-                      </div><br><br>
-                      <div id="toggle{{ order.porder.id }}">
-                      <p class="text-center">Status: <span class="text-primary" id="status{{ order.porder.id }}">{{ order.porder.status|title }}</span></p>
-                      <p>Order placed: <span class="time text-primary">{{ order.ptimestamp }}</span></p>
-                      <p>type: <span class="text-primary">{{ order.porder.delivery_type }} {{ order.porder.delivery_instructions }}</span></p>
-                      <p>Payment: <span class="text-primary">{{ order.porder.payment }}</span></p>
-                      <button type="button" class="btn btn-primary mb-3" onclick="orderInfo('{{ order.porder.id }}')">Order Info</button>
-                      <br><br>
-                      <table id="orderInfo{{ order.porder.id }}" class="table table-borderless ftco-bg-dark shadow-lg" style="display: none;">
-                          <tbody>
-                              {% for i in order.porderFood %}
-                              <tr>
-                                  <td>
-                                      <span class="float-left text-primary">{{ i|title }}</span>
-                                      <br>
-                                      <span class="font-weight-lighter ml-3">
-                                          {% if i.getfood_type == 'sub' %}
-                                          - with extra {{ i.get_extra|default:'no extras' }}
-                                          {% endif %}
-                                          {{ i.get_toppings }}
-                                      </span>
-                                  </td>
-                                  <td>QTY: <span class="text-primary"> {{ i.quantity }}</span>
-                                  </td>
-                                  <td class="text-right text-primary">${{ i.get_overall_price }}</td>
-                              </tr>
-                              {% endfor %}
-                          </tbody>
-                          <tfoot>
-                              <tr>
-                                  <td colspan="3" class="text-right">Total:&nbsp;<span class="font-weight-bold text-primary">${{ order.porder.total }}</span>
-                                  </td>
-                              </tr>
-                          </tfoot>
-                      </table>
-                      </div>
-                  </div>
-              </div>
+      {% if prev_orders|length > 0 %}
+      {% for order in prev_orders %}
+      <div class="col-lg-3 d-flex ftco-animate ftco-bg-dark m-1 justify-content-center" id="order{{ order.porder.id }}">
+        <div class="services-wrap d-flex">
+          <div class="text p-4">
+            <div>
+              <h3 class="text-center float-left" id="header{{ order.porder.id }}">Order no: <span
+                  class="text-primary">{{ order.porder.id }}</span></h3>
+              <button id="orderBtn{{ order.porder.id }}" type="button" style="font-size: larger;"
+                class="btn btn-primary float-right px-3 ml-3 font-weight-bold"
+                onclick="closeOrder('{{ order.porder.id }}')">&times;</button>
+            </div><br><br>
+            <div id="toggle{{ order.porder.id }}">
+              <p class="text-center">Status: <span class="text-primary"
+                  id="status{{ order.porder.id }}">{{ order.porder.status|title }}</span></p>
+              <p>Order placed: <span class="time text-primary">{{ order.ptimestamp }}</span></p>
+              <p>type: <span class="text-primary">{{ order.porder.delivery_type }}
+                  {{ order.porder.delivery_instructions }}</span></p>
+              <p>Payment: <span class="text-primary">{{ order.porder.payment }}</span></p>
+              <button type="button" class="btn btn-primary mb-3" onclick="orderInfo('{{ order.porder.id }}')">Order
+                Info</button>
+              <br><br>
+              <table id="orderInfo{{ order.porder.id }}" class="table table-borderless ftco-bg-dark shadow-lg"
+                style="display: none;">
+                <tbody>
+                  {% for i in order.porderFood %}
+                  <tr>
+                    <td>
+                      <span class="float-left text-primary">{{ i|title }}</span>
+                      <br>
+                      <span class="font-weight-lighter ml-3">
+                        {% if i.getfood_type == 'sub' %}
+                        - with extra {{ i.get_extra|default:'no extras' }}
+                        {% endif %}
+                        {{ i.get_toppings }}
+                      </span>
+                    </td>
+                    <td>QTY: <span class="text-primary"> {{ i.quantity }}</span>
+                    </td>
+                    <td class="text-right text-primary">${{ i.get_overall_price }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="3" class="text-right">Total:&nbsp;<span
+                        class="font-weight-bold text-primary">${{ order.porder.total }}</span>
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
           </div>
-          {% endfor %}
-          {% else %}
-          No previous orders!
-          {% endif %}
+        </div>
       </div>
+      {% endfor %}
+      {% else %}
+      No previous orders!
+      {% endif %}
+    </div>
   </div>
 </section>
 

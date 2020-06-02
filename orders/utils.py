@@ -2,6 +2,8 @@ from .models import *
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+
+# When putting food in cart, this function checks the combo of choices per food
 def validate_food_choices(food_id, toppings, extras):
     food = Food.objects.get(pk=food_id)
     if toppings == None:
@@ -12,7 +14,7 @@ def validate_food_choices(food_id, toppings, extras):
         extras_len = 0
     else:
         extras_len = len(extras)
-    
+
     if 'pizza' in food.food_type.name:
         if '1' in food.name and toppings_len == 1:
             return
@@ -24,20 +26,23 @@ def validate_food_choices(food_id, toppings, extras):
             if toppings_len == 0:
                 return
         else:
-            raise ValidationError(_('Only certain pizzas are allowed custon toppings'))
+            raise ValidationError(
+                _('Only certain pizzas are allowed custon toppings'))
     elif 'pizza' not in food.food_type.name and toppings_len > 0:
-        raise ValidationError(_('Only certain pizzas are allowed custon toppings'))
+        raise ValidationError(
+            _('Only certain pizzas are allowed custon toppings'))
     elif 'sub' not in food.food_type.name and extras_len > 0:
         raise ValidationError(_('Only subs are allowed extras'))
     else:
         return
 
-        
+
+# Calcutes total as food is going into cart one by one
 def calc_total(user_id, quantity, food_id, extras):
     order = Order.objects.filter(user=user_id).filter(status='checkout')
     food = Food.objects.get(pk=food_id)
     food_total = food.price
-    
+
     if extras is not None:
         extra_prices = []
         for extra in extras:
@@ -45,19 +50,22 @@ def calc_total(user_id, quantity, food_id, extras):
             extra_prices.append(e.price)
         for p in extra_prices:
             food_total += p
-    
+
     food_total *= quantity
-    
-    if order.count() == 0:  
+
+    if order.count() == 0:
         total = food_total
     else:
         total = order[0].total + food_total
     return total
 
+
+# Adds a new order or updates the total on an existing order 
+# Orders that have not been confirmed, have checkout status
 def add_order(user_id, total_price):
     user = User.objects.get(pk=user_id)
     order = Order.objects.filter(user=user).filter(status='checkout')
-    
+
     if order.count() == 0:
         new_order = Order(user=user, total=total_price)
         new_order.save()
@@ -67,9 +75,11 @@ def add_order(user_id, total_price):
         order.total = total_price
         order.save()
         order_id = order.id
-    
+
     return order_id
 
+
+# If item already exists in cart, this updates quanitity
 def updateOrderItem(id, quantity):
     orderToUpdate = OrderToFood.objects.get(pk=id)
     new_qty = orderToUpdate.quantity + quantity
@@ -77,6 +87,8 @@ def updateOrderItem(id, quantity):
     orderToUpdate.save()
     return
 
+
+# Adds item to cart associated with order id, checks is order already exists, if so, updates quanity above
 def add_order_items(order_id, food_id, toppings, extras, quantity):
     order = Order.objects.get(pk=order_id)
     food = Food.objects.get(pk=food_id)
@@ -88,7 +100,7 @@ def add_order_items(order_id, food_id, toppings, extras, quantity):
             if 'pizza' in x.food_item.food_type.name:
                 if 'topping' in x.food_item.name:
                     xt = list(x.topping.all().values_list('name', flat=True))
-                    xt.sort() 
+                    xt.sort()
                     toppings.sort()
                     if toppings == xt:
                         updateOrderItem(x.id, quantity)
@@ -99,7 +111,7 @@ def add_order_items(order_id, food_id, toppings, extras, quantity):
                     OrderToFood_id = x.id
                     order_updated = True
             elif 'sub' in x.food_item.food_type.name:
-                xe =list(x.extra.all().values_list('name', flat=True))
+                xe = list(x.extra.all().values_list('name', flat=True))
                 xe.sort()
                 extras.sort()
                 if extras == xe:
@@ -110,7 +122,7 @@ def add_order_items(order_id, food_id, toppings, extras, quantity):
                 updateOrderItem(x.id, quantity)
                 OrderToFood_id = x.id
                 order_updated = True
-    
+
     if order_updated == False:
         new_item = OrderToFood(order=order, food_item=food, quantity=quantity)
         new_item.save()
@@ -121,7 +133,7 @@ def add_order_items(order_id, food_id, toppings, extras, quantity):
                 t = Topping.objects.get(name=topping)
                 new_item.topping.add(t)
                 new_item.save()
-        
+
         if extras is not None:
             for extra in extras:
                 e = ExtraForSub.objects.get(name=extra)
@@ -129,43 +141,59 @@ def add_order_items(order_id, food_id, toppings, extras, quantity):
                 new_item.save()
     return OrderToFood_id
 
+
+# When pages load, if items in cart, those items are extracted from database
+# Else returns none
 def check_cart(user_id):
     order = Order.objects.filter(user=user_id).filter(status='checkout')
     if order.count() == 0:
         return None
     else:
-       order = Order.objects.get(pk=order[0].id)
-       order_items = OrderToFood.objects.filter(order=order) 
-       return list(order_items)
+        order = Order.objects.get(pk=order[0].id)
+        order_items = OrderToFood.objects.filter(order=order)
+        return list(order_items)
 
+
+# Gets order id for items in cart
+# Orders that have not been placed are in checkout status
 def get_order(user_id):
     order = Order.objects.filter(user=user_id).filter(status='checkout')
     order = Order.objects.get(pk=order[0].id)
     return order
 
+
+# Get total number of items in cart
+# To display number by the cart icon in the nav
 def get_total_qty(cart_items):
     total_qty = 0
     for item in cart_items:
         total_qty += item.quantity
     return total_qty
 
+
+#  Get order id for placed order to show on accounts page
 def check_order(user_id):
-    order = Order.objects.filter(user=user_id).exclude(status='checkout').exclude(status='completed')
+    order = Order.objects.filter(user=user_id).exclude(
+        status='checkout').exclude(status='completed')
     if order.count() == 0:
         return None
     else:
         order = Order.objects.get(pk=order[0].id)
     return order
 
+
+# Get foods in placed order
 def get_order_food(order):
     order_items = OrderToFood.objects.filter(order=order)
     return list(order_items)
 
+
+# If order is changed in cart, update the total and update order
 def update_total(user_id, OrderToFood_id, extras, quantity):
     order_list = Order.objects.filter(user=user_id).filter(status='checkout')
     order = Order.objects.get(pk=order_list[0].id)
     item = OrderToFood.objects.get(pk=OrderToFood_id)
-    
+
     old_price = item.get_overall_price()
     old_total = order.total
     food_price = item.food_item.price
@@ -177,7 +205,7 @@ def update_total(user_id, OrderToFood_id, extras, quantity):
             extra_prices.append(e.price)
         for p in extra_prices:
             food_price += p
-    
+
     new_price = food_price * quantity
 
     new_total = (old_total - old_price) + new_price
@@ -186,6 +214,8 @@ def update_total(user_id, OrderToFood_id, extras, quantity):
     order.save()
     return new_total
 
+
+# if cart is edited, update the item in OrderToFoods
 def update_item(OrderToFood_id, extras, toppings, quantity):
     item = OrderToFood.objects.get(pk=OrderToFood_id)
 
@@ -199,12 +229,11 @@ def update_item(OrderToFood_id, extras, toppings, quantity):
             t = Topping.objects.get(name=topping)
             item.topping.add(t)
             item.save()
-        
+
     if extras is not None:
         for extra in extras:
             e = ExtraForSub.objects.get(name=extra)
             item.extra.add(e)
             item.save()
-    
+
     return item
-    

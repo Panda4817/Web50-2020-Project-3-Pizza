@@ -1101,6 +1101,7 @@ textarea.form-control {
 .about-author .desc h3 {
   font-size: 24px;
 }
+
 .ftco-section {
   padding: 7em 0;
   position: relative;
@@ -1143,9 +1144,6 @@ textarea.form-control {
   position: relative;
   text-transform: uppercase;
   letter-spacing: 1px;
-}
-.ftco-footer .ftco-footer-widget ul li a span {
-  color: #fff;
 }
 .ftco-footer .ftco-footer-widget .btn-primary {
   background: #fff !important;
@@ -1210,8 +1208,19 @@ textarea.form-control {
   left: 50%;
   transform: translate(-50%, -50%);
 }
-.ftco-footer-social li a:hover {
+.ftco-footer-social li a i {
+  position: absolute;
+  font-size: 26px !important;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   color: #fff;
+}
+.ftco-footer-social li a:hover {
+  background-color: #fac564 !important;
+}
+.ftco-footer-social li a:hover span, .ftco-footer-social li a:hover i {
+  color: #000 !important;
 }
 
 #map {
@@ -1540,6 +1549,7 @@ textarea.form-control {
     margin-bottom: 5px;
   }
 }
+
 .block-20 {
   overflow: hidden;
   background-size: cover;
@@ -1617,6 +1627,7 @@ textarea.form-control {
 .block-6 {
   margin-bottom: 40px;
 }
+
 .block-18 .icon > span {
   font-size: 40px;
 }
@@ -1699,6 +1710,7 @@ textarea.form-control {
   box-shadow: none !important;
   font-size: 15px;
 }
+
 .block-21 .blog-img {
   display: block;
   height: 80px;

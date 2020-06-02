@@ -1,23 +1,23 @@
 {% extends 'orders/base.html' %}
-
+{% load static %}
 {% block title %}
-  Home
+Home
 {% endblock %}
 
 {% block body %}
 <section class="home-slider owl-carousel img" style="background-image: url(static/orders/images/bg_1.jpg);">
   <div class="slider-item">
-      <div class="overlay"></div>
+    <div class="overlay"></div>
     <div class="container">
       <div class="row slider-text align-items-center" data-scrollax-parent="true">
         <div class="col-md-6 col-sm-12 ftco-animate">
           <span class="subheading">Delicious</span>
           <h1 class="mb-4">Italian Cuizine</h1>
           <p class="mb-4 mb-md-5">We sell award-winning sicilian-style pizza and mouth-watering steak subs!</p>
-          <p><a href="/menu" class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a></p>
+          <p><a href="{% url 'menu' %}" class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a></p>
         </div>
         <div class="col-md-6 ftco-animate">
-          <img src="static/orders/images/bg_1.png" class="img-fluid" alt="">
+          <img src="{% static '/orders/images/bg_1.png' %}" class="img-fluid" alt="pizza">
         </div>
       </div>
     </div>
@@ -29,11 +29,12 @@
         <div class="col-md-6 col-sm-12 order-md-last ftco-animate">
           <span class="subheading">Crunchy</span>
           <h1 class="mb-4">Italian Pizza</h1>
-          <p class="mb-4 mb-md-5">Our Sicilian pizza is a deep-dish or thick-crust pizza. We sell them in a 9-slice or a 15-slice size.</p>
-          <p><a href="/menu" class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a></p>
+          <p class="mb-4 mb-md-5">Our Sicilian pizza is a deep-dish or thick-crust pizza. We sell them in a 9-slice or a
+            15-slice size.</p>
+          <p><a href="{% url 'menu' %}" class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a></p>
         </div>
         <div class="col-md-6 ftco-animate">
-          <img src="static/orders/images/bg_2.png" class="img-fluid" alt="">
+          <img src="{% static '/orders/images/bg_2.png' %}" class="img-fluid" alt="pizza">
         </div>
       </div>
     </div>
@@ -45,8 +46,10 @@
         <div class="col-md-7 col-sm-12 text-center ftco-animate">
           <span class="subheading">Welcome</span>
           <h1 class="mb-4">We can make any of our pizzas in about 10 to 15 minutes.</h1>
-          <p class="mb-4 mb-md-5">Our Regular pizza is a thin-crust or Neapolitan pizza. They come in 2 sizes: small (12" in diameter) and large (16" in diameter). The small is suitable for 1 to 2 people while the large feeds 2 to 4 people.</p>
-          <p><a href="/menu" class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a></p>
+          <p class="mb-4 mb-md-5">Our Regular pizza is a thin-crust or Neapolitan pizza. They come in 2 sizes: small
+            (12" in diameter) and large (16" in diameter). The small is suitable for 1 to 2 people while the large feeds
+            2 to 4 people.</p>
+          <p><a href="{% url 'menu' %}" class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a></p>
         </div>
       </div>
     </div>
@@ -59,72 +62,77 @@
       <div class="info">
         <div class="row no-gutters">
           <div class="col-md-4 d-flex ftco-animate">
-              <div class="icon"><span class="icon-phone"></span></div>
-              <div class="text">
-                  <h3>617-876-4897</h3>
-                  <p>Eat More Pizza!</p>
-              </div>
+            <div class="icon"><span class="icon-phone"></span></div>
+            <div class="text">
+              <h3>617-876-4897</h3>
+              <p>Eat More Pizza!</p>
+            </div>
           </div>
           <div class="col-md-4 d-flex ftco-animate">
-              <div class="icon"><span class="icon-my_location"></span></div>
-              <div class="text">
-                  <h3>74 Winthrop Street</h3>
-                  <p>Harvard Square</p>
-              </div>
+            <div class="icon"><span class="icon-my_location"></span></div>
+            <div class="text">
+              <h3>74 Winthrop Street</h3>
+              <p>Harvard Square</p>
+            </div>
           </div>
           <div class="col-md-4 d-flex ftco-animate">
-              <div class="icon"><span class="icon-clock-o"></span></div>
-              <div class="text">
-                  <h3>Open Monday-Thursday</h3>
-                  <p>11 am - 1 am</p>
-                  <h3>Open Friday - Saturday</h3>
-                  <p>11 am - 2:30 am</p>
-                  <h3>Open Sunday</h3>
-                  <p>1 pm - 12 midnight</p>
-              </div>
+            <div class="icon"><span class="icon-clock-o"></span></div>
+            <div class="text" id="about">
+              <h3>Open Monday-Thursday</h3>
+              <p>11 am - 1 am</p>
+              <h3>Open Friday - Saturday</h3>
+              <p>11 am - 2:30 am</p>
+              <h3>Open Sunday</h3>
+              <p>1 pm - 12 midnight</p>
+            </div>
           </div>
         </div>
       </div>
-        <div class="social d-md-flex pl-md-5 p-4 align-items-center">
-          <ul class="social-icon">
-            <li class="ftco-animate"><a href="#"><span class="icon-twitter"></span></a></li>
-            <li class="ftco-animate"><a href="#"><span class="icon-facebook"></span></a></li>
-            <li  class="ftco-animate"><a href="#"><span class="icon-instagram"></span></a></li>
-          </ul>
-        </div>
+      <div class="social d-md-flex pl-md-5 p-4 align-items-center">
+        <ul class="social-icon">
+          <li class="ftco-animate"><a href="https://twitter.com/explore"><span class="icon-twitter"></span></a></li>
+          <li class="ftco-animate"><a href="https://www.facebook.com/"><span class="icon-facebook"></span></a></li>
+          <li class="ftco-animate"><a href="https://www.instagram.com/?hl=en"><span class="icon-instagram"></span></a>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 </section>
 
-<section id="about" class="ftco-about d-md-flex">
-    <div class="one-half img" style="background-image: url(static/orders/images/about.jpg);"></div>
-    <div class="one-half ftco-animate">
-      <div class="heading-section ftco-animate ">
-        <h2 class="mb-4">Welcome to <span class="flaticon-pizza">Pinocchio's </span>Pizza & Subs Restaurant</h2>
-      </div>
-      <div>
-        <p>Noch's has been in business for over 50 years! We've been feeding Harvard and the surrounding area since 1966! We sell award-winning sicilian-style pizza and mouth-watering steak subs! We have over 750 reviews on Yelp--- check it out!</p>
-      </div>
+<section class="ftco-about d-md-flex">
+  <div class="one-half img" style="background-image: url(static/orders/images/about.jpg);"></div>
+  <div class="one-half ftco-animate">
+    <div class="heading-section ftco-animate ">
+      <h2 class="mb-4">Welcome to <span class="flaticon-pizza">Pinocchio's </span>Pizza & Subs Restaurant</h2>
     </div>
+    <div id="directions">
+      <p>Noch's has been in business for over 50 years! We've been feeding Harvard and the surrounding area since 1966!
+        We sell award-winning sicilian-style pizza and mouth-watering steak subs! We have over 750 reviews on Yelp---
+        check it out!</p>
+    </div>
+  </div>
 </section>
 <section id="directions" class="ftco-appointment">
   <div class="overlay"></div>
   <div class="container-wrap">
-    <div class="row no-gutters d-md-flex align-items-center">
-        <a href="https://www.google.com/maps/place/Pinocchio's+Pizza+%26+Subs/@42.3719941,-71.1225542,17z/data=!4m13!1m7!3m6!1s0x89e3775d51d69b07:0xa4d76bff98604ad5!2s74+Winthrop+St,+Cambridge,+MA+02138!3b1!8m2!3d42.3719941!4d-71.1203655!3m4!1s0x89e3775d4e48fa43:0xcab27982991e9fe3!8m2!3d42.3720081!4d-71.1202842">
-          <div class="col-md-4 d-flex align-self-stretch"> 
-            <img src="/static/orders/images/map.gif" alt="">
-          </div>
+    <div class="row align-items-center justify-content-around">
+      <div class="col-lg-4">
+        <a
+          href="https://www.google.com/maps/place/Pinocchio's+Pizza+%26+Subs/@42.3719941,-71.1225542,17z/data=!4m13!1m7!3m6!1s0x89e3775d51d69b07:0xa4d76bff98604ad5!2s74+Winthrop+St,+Cambridge,+MA+02138!3b1!8m2!3d42.3719941!4d-71.1203655!3m4!1s0x89e3775d4e48fa43:0xcab27982991e9fe3!8m2!3d42.3720081!4d-71.1202842">
+          <img src="{% static '/orders/images/map.gif' %}" alt="map">
+
         </a>
-        <div class="col-md-5 appointment ftco-animate">
-          <h3 class="mb-3">Directions</h3>
-          <p>Pinocchio's is located on Winthrop street right near the corner of JFK Street next to Berk's shoes.</p>
-          <p>We are 2 blocks from the Harvard Square T stop.</p> 
-          <p>Do not park across the street from us! It is a tow zone!</p>
-        </div>
-        <div class="col-md-3 appointment ftco-animate">
-          <img src="static/orders/images/logo.gif" alt="">
-        </div>       			
+      </div>
+      <div class="col-lg-4 ftco-animate p-5">
+        <h3 class="mb-3">Directions</h3>
+        <p>Pinocchio's is located on Winthrop street right near the corner of JFK Street next to Berk's shoes.</p>
+        <p>We are 2 blocks from the Harvard Square T stop.</p>
+        <p>Do not park across the street from us! It is a tow zone!</p>
+      </div>
+      <div class="col-lg-3 ftco-animate">
+        <img src="{% static '/orders/images/logo.gif' %}" alt="logo">
+      </div>
     </div>
   </div>
 </section>

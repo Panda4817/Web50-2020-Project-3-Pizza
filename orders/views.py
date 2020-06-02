@@ -9,19 +9,21 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.template.loader import render_to_string
 from django.views.generic.edit import FormView
+from django.views.generic.base import TemplateView
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.contrib import messages
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
-from django.contrib.auth import login, authenticate, update_session_auth_hash, REDIRECT_FIELD_NAME
+from django.contrib.auth import login, authenticate, update_session_auth_hash, REDIRECT_FIELD_NAME, get_user_model
 from django.contrib.auth import login as auth_login
-from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm, AuthenticationForm, PasswordResetForm, SetPasswordForm
 from django.contrib.auth.models import User
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import PasswordContextMixin
 from django.contrib.auth.signals import user_logged_out, user_logged_in
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.tokens import default_token_generator
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db import transaction
 from django.conf import settings
@@ -37,6 +39,9 @@ from .utils import *
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # Create your views here.
+
+
+# Homepage
 def index(request):
     if request.method == 'POST':
         form = ContactForm(request.POST)
@@ -53,7 +58,8 @@ def index(request):
                 recipients.append(email)
 
             send_mail(subject, message_to_send, email, recipients)
-            messages.info(request, "Thank you for the message. We will get back to you as soon as possible.")
+            messages.info(
+                request, "Thank you for the message. We will get back to you as soon as possible.")
         return redirect('index')
 
     user_logged_in.connect(show_login_message)
@@ -72,9 +78,11 @@ def index(request):
                 'cform': form,
             }
             return render(request, 'orders/index.html', context)
-    
+
     return render(request, 'orders/index.html', {'cform': form})
 
+
+# Menu page
 def menu(request):
     if request.method == 'POST':
         user_id = request.user.id
@@ -82,17 +90,18 @@ def menu(request):
         extras = request.POST.getlist("extras[]")
         toppings = request.POST.getlist("toppings[]")
         quantity = int(request.POST['quantity'])
-        
+
         try:
             validate_food_choices(food_id, toppings, extras)
         except ValidationError as e:
             non_field_errors = e.message_dict[NON_FIELD_ERRORS]
             messages.error(request, non_field_errors)
             return redirect('menu')
-        
+
         total_price = calc_total(user_id, quantity, food_id, extras)
         order_id = add_order(user_id, total_price)
-        ordertofood_id = add_order_items(order_id, food_id, toppings, extras, quantity)
+        ordertofood_id = add_order_items(
+            order_id, food_id, toppings, extras, quantity)
 
         fooditem = Food.objects.get(pk=food_id)
         result = {
@@ -107,11 +116,13 @@ def menu(request):
         }
         response = JsonResponse(result)
         return response
-    
+
     else:
         types = FoodType.objects.values_list('name', flat=True).order_by("-pk")
-        dict_food = {i: list(Food.objects.filter(food_type__name=i).order_by('size')) for i in types}
-        toppings = Topping.objects.values_list('name', flat=True).order_by("-pk")
+        dict_food = {i: list(Food.objects.filter(
+            food_type__name=i).order_by('size')) for i in types}
+        toppings = Topping.objects.values_list(
+            'name', flat=True).order_by("-pk")
         extras = list(ExtraForSub.objects.all().order_by("-pk"))
         form = ContactForm()
         if request.user.is_authenticated:
@@ -131,7 +142,7 @@ def menu(request):
                     'cform': form,
                 }
                 return render(request, 'orders/menu.html', context)
-        
+
         context = {
             "types": types,
             "dictfood": dict_food,
@@ -141,25 +152,28 @@ def menu(request):
         }
         return render(request, 'orders/menu.html', context)
 
+
+# Cart page
 @login_required(login_url="login")
 def cart(request):
     if request.user.address.email_confirmed == False:
-        messages.warning(request, "Your email address is NOT confirmed yet. You CANNOT place an order until you do. Please check your inbox and/or spam folder.")
+        messages.warning(
+            request, "Your email address is NOT confirmed yet. You CANNOT place an order until you do. Please check your inbox and/or spam folder.")
     form = ContactForm()
     DetailsForm = CheckoutDetailsForm(initial={
-        'first_name': request.user.first_name, 
-        'last_name': request.user.last_name, 
-        'email': request.user.email, 
-        'street_address_1': request.user.address.street_address_1, 
+        'first_name': request.user.first_name,
+        'last_name': request.user.last_name,
+        'email': request.user.email,
+        'street_address_1': request.user.address.street_address_1,
         'street_address_2': request.user.address.street_address_2,
-        'city': request.user.address.city, 
+        'city': request.user.address.city,
         'post_code': request.user.address.post_code,
         'tel': request.user.address.tel
     })
     DeliveryForm = CheckoutDeliveryForm()
 
     PaymentTypeForm = CheckoutPaymentForm()
-    
+
     user_id = request.user.id
     current_cart = check_cart(user_id)
     if current_cart != None:
@@ -184,6 +198,7 @@ def cart(request):
         'cform': form,
     })
 
+# When cart items are edited
 @login_required(login_url="login")
 def update_cart(request):
     if request.method == 'POST':
@@ -193,7 +208,7 @@ def update_cart(request):
         toppings = request.POST.getlist("toppings[]")
         quantity = int(request.POST['quantity'])
         print(extras)
-        
+
         updated_total = update_total(user_id, OrderToFood_id, extras, quantity)
         item = update_item(OrderToFood_id, extras, toppings, quantity)
         current_cart = check_cart(user_id)
@@ -201,7 +216,7 @@ def update_cart(request):
             qty = get_total_qty(current_cart)
         else:
             qty = 0
-        
+
         result = {
             'total': updated_total,
             'item': item.__str__(),
@@ -215,9 +230,11 @@ def update_cart(request):
         }
         response = JsonResponse(result)
         return response
-    
+
     return redirect('cart')
 
+
+# When a cart item is deleted
 @login_required(login_url='login')
 def delete_item_cart(request):
     if request.method == 'POST':
@@ -245,9 +262,10 @@ def delete_item_cart(request):
         }
         response = JsonResponse(result)
         return response
-    
+
     return redirect('cart')
 
+# When checkout process completed and cash was chosen as payment
 @login_required(login_url="login")
 def cash(request):
     if request.method == 'POST':
@@ -258,8 +276,10 @@ def cash(request):
         if details_form.is_valid() and delivery_form.is_valid() and payment_form.is_valid():
             user = details_form.save()
             user.refresh_from_db()  # load the address instance created by the signal
-            user.address.street_address_1 = details_form.cleaned_data.get('street_address_1')
-            user.address.street_address_2 = details_form.cleaned_data.get('street_address_2')
+            user.address.street_address_1 = details_form.cleaned_data.get(
+                'street_address_1')
+            user.address.street_address_2 = details_form.cleaned_data.get(
+                'street_address_2')
             user.address.city = details_form.cleaned_data.get('city')
             user.address.post_code = details_form.cleaned_data.get('post_code')
             user.address.tel = details_form.cleaned_data.get('tel')
@@ -279,10 +299,12 @@ def cash(request):
             messages.success(request, "Order placed and confirmed")
             return redirect('/account#order-confirmed')
         else:
-            messages.error(request, 'There was error and order is NOT confirmed. Please try again or contact us.')
-    
+            messages.error(
+                request, 'There was error and order is NOT confirmed. Please try again or contact us.')
+
     return redirect('cart')
 
+# When checkout process is completed and card is chosen
 @login_required(login_url="login")
 def card(request):
     if request.method == 'POST':
@@ -293,15 +315,17 @@ def card(request):
         if details_form.is_valid() and delivery_form.is_valid() and payment_form.is_valid():
             user = details_form.save()
             user.refresh_from_db()  # load the address instance created by the signal
-            user.address.street_address_1 = details_form.cleaned_data.get('street_address_1')
-            user.address.street_address_2 = details_form.cleaned_data.get('street_address_2')
+            user.address.street_address_1 = details_form.cleaned_data.get(
+                'street_address_1')
+            user.address.street_address_2 = details_form.cleaned_data.get(
+                'street_address_2')
             user.address.city = details_form.cleaned_data.get('city')
             user.address.post_code = details_form.cleaned_data.get('post_code')
             user.address.tel = details_form.cleaned_data.get('tel')
             user.save()
             delivery_form.save()
             payment_form.save()
-            
+
             user_id = request.user.id
             order = get_order(request.user.id)
             current_cart_items = check_cart(user_id)
@@ -313,10 +337,13 @@ def card(request):
             }
             return render(request, 'orders/card.html', context)
         else:
-            messages.error(request, 'There was error and order is NOT confirmed. Please try again or contact us.')
-    
+            messages.error(
+                request, 'There was error and order is NOT confirmed. Please try again or contact us.')
+
     return redirect('cart')
 
+
+# When card details are entered into stripe form, a charge is created for that form
 @login_required(login_url="login")
 def charge(request):
     if request.method == 'POST':
@@ -324,25 +351,25 @@ def charge(request):
             customer = stripe.Customer.retrieve(str(request.user.id))
         except stripe.error.InvalidRequestError:
             customer = stripe.Customer.create(
-                id = request.user.id,
-                name = request.user.get_full_name(),
-                email = request.user.email,
-                address = {
+                id=request.user.id,
+                name=request.user.get_full_name(),
+                email=request.user.email,
+                address={
                     'line1': request.user.address.street_address_1,
                     'line2': request.user.address.street_address_2,
                     'city': request.user.address.city,
                     'postal_code': request.user.address.post_code
                 },
-                phone = request.user.address.tel,
-                source = request.POST['stripeToken']
+                phone=request.user.address.tel,
+                source=request.POST['stripeToken']
             )
         order = get_order(request.user.id)
         amount = int(order.total * 100)
         charge = stripe.Charge.create(
-            customer = customer,
-            amount = amount,
-            currency = 'usd',
-            description = 'Food Order',
+            customer=customer,
+            amount=amount,
+            currency='usd',
+            description='Food Order',
         )
 
         order.status = 'confirmed'
@@ -357,12 +384,14 @@ def charge(request):
         messages.success(request, "Order placed and confirmed")
         return redirect('/account#order-confirmed')
 
-    return redirect('cart') 
+    return redirect('cart')
 
+# Account page
 @login_required(login_url="login")
 def account(request):
     if request.user.address.email_confirmed == False:
-        messages.warning(request, "Your email address is NOT confirmed yet. You CANNOT place an order until you do. Please check your inbox and/or spam folder.")
+        messages.warning(
+            request, "Your email address is NOT confirmed yet. You CANNOT place an order until you do. Please check your inbox and/or spam folder.")
     form = ContactForm()
     user_id = request.user.id
     a = False
@@ -371,7 +400,7 @@ def account(request):
 
     current_order = check_order(user_id)
     print(current_order)
-    contexta={}
+    contexta = {}
     if current_order != None:
         current_order_food = get_order_food(current_order)
         timestamp = current_order.timestamp
@@ -395,9 +424,10 @@ def account(request):
             'no_items': qty
         }
         b = True
-    
+
     prev_orders_list = []
-    prev_orders = list(Order.objects.filter(status='completed').filter(user=user_id).order_by('pk'))
+    prev_orders = list(Order.objects.filter(
+        status='completed').filter(user=user_id).order_by('pk'))
     print(prev_orders)
     for order in prev_orders:
         order_items = list(OrderToFood.objects.filter(order=order))
@@ -409,8 +439,8 @@ def account(request):
             'ptimestamp': timestamp
         }
         prev_orders_list.append(order_dict)
-    
-    context={}
+
+    context = {}
     if a == True and b == True:
         context.update(contexta)
         context.update(contextb)
@@ -418,14 +448,16 @@ def account(request):
         context.update(contexta)
     else:
         context.update(contextb)
-   
+
     context.update({
         'prev_orders': prev_orders_list,
         'cform': form,
-    }) 
-    
+    })
+
     return render(request, 'orders/account.html', context)
 
+
+# Customised context in PasswordContentMixin
 class myPasswordContextMixin:
     extra_context = None
 
@@ -447,7 +479,7 @@ class myPasswordContextMixin:
                     **(self.extra_context or {})
                 })
                 return context
-        
+
         context.update({
             'cform': form,
             'title': self.title,
@@ -455,6 +487,8 @@ class myPasswordContextMixin:
         })
         return context
 
+
+# Added custom PasswordContentMixin
 class myPasswordChangeView(myPasswordContextMixin, FormView):
     form_class = PasswordChangeForm
     success_url = reverse_lazy('password_change_done')
@@ -479,23 +513,31 @@ class myPasswordChangeView(myPasswordContextMixin, FormView):
         update_session_auth_hash(self.request, form.user)
         return super().form_valid(form)
 
+
+# When password is changed sucessfully, redirects back to account page
 @login_required(login_url="login")
 def password_change_done(request):
     messages.info(request, "Your password has been updated.")
     return redirect('account')
 
+
+# When password reset  is completed successfully, redirects to login page
 def password_reset_complete(request):
     messages.info(request, "Your password has been reset.")
     return redirect('login')
 
+
+# Register page
 def register(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
             user = form.save()
             user.refresh_from_db()  # load the address instance created by the signal
-            user.address.street_address_1 = form.cleaned_data.get('street_address_1')
-            user.address.street_address_2 = form.cleaned_data.get('street_address_2')
+            user.address.street_address_1 = form.cleaned_data.get(
+                'street_address_1')
+            user.address.street_address_2 = form.cleaned_data.get(
+                'street_address_2')
             user.address.city = form.cleaned_data.get('city')
             user.address.post_code = form.cleaned_data.get('post_code')
             user.save()
@@ -509,7 +551,8 @@ def register(request):
                 'token': account_activation_token.make_token(user),
             })
             user.email_user(subject, message)
-            messages.info(request, "Please confirm your email address to complete the registration.")
+            messages.info(
+                request, "Please confirm your email address to complete the registration.")
             return render(request, 'orders/index.html')
         else:
             for msg in form.error_messages:
@@ -517,17 +560,16 @@ def register(request):
     else:
         form = SignUpForm()
 
-    
     form1 = ContactForm()
-    
-    context= {
+
+    context = {
         'cform': form1,
         'form': form,
     }
     return render(request, 'registration/register.html', context)
 
 
-
+# When link in email is clicked, activation process occurs
 def activate(request, uidb64, token):
     try:
         uid = force_text(urlsafe_base64_decode(uidb64))
@@ -540,13 +582,17 @@ def activate(request, uidb64, token):
         user.address.email_confirmed = True
         user.save()
         login(request, user)
-        messages.info(request, f"Hello { user.username }! You are ready to order some delicious pizza!")
-        return redirect('index')
-        
-    else:
-        messages.error(request, "The confirmation link was invalid, possibly because it has already been used.")
+        messages.info(
+            request, f"Hello { user.username }! You are ready to order some delicious pizza!")
         return redirect('index')
 
+    else:
+        messages.error(
+            request, "The confirmation link was invalid, possibly because it has already been used.")
+        return redirect('index')
+
+
+# Staff page
 @staff_member_required(login_url='login')
 def staff(request):
     if request.method == 'POST':
@@ -562,10 +608,10 @@ def staff(request):
             'status': order.status
         }
         return JsonResponse(result)
-    
-    
-    orders=[]
-    order_objects = list(Order.objects.exclude(status='checkout').exclude(status='completed').order_by('pk'))
+
+    orders = []
+    order_objects = list(Order.objects.exclude(
+        status='checkout').exclude(status='completed').order_by('pk'))
     for order in order_objects:
         user = User.objects.get(pk=order.user.id)
         order_items = list(OrderToFood.objects.filter(order=order))
@@ -589,13 +635,13 @@ def staff(request):
             'orderfood': order_items,
         }
         orders.append(order_dict)
-    
+
     changeStatusForm = ChangeStatusForm(initial={
         'status': 'confirmed',
     })
 
     form = ContactForm()
-    
+
     user_id = request.user.id
     current_cart = check_cart(user_id)
     if current_cart != None:
@@ -610,7 +656,7 @@ def staff(request):
             'cform': form,
         }
         return render(request, 'orders/staff.html', context)
-     
+
     context = {
         'orders': orders,
         'ChangeStatusForm': changeStatusForm,
@@ -618,12 +664,16 @@ def staff(request):
     }
     return render(request, 'orders/staff.html', context)
 
+
+# Custom loginView with context updated
 class SuccessURLAllowedHostsMixin:
     success_url_allowed_hosts = set()
 
     def get_success_url_allowed_hosts(self):
         return {self.request.get_host(), *self.success_url_allowed_hosts}
 
+
+# Added contact form to loginView
 class myLoginView(SuccessURLAllowedHostsMixin, FormView):
     """
     Display the login form and handle the login action.
@@ -690,4 +740,118 @@ class myLoginView(SuccessURLAllowedHostsMixin, FormView):
             'cform': cform,
             **(self.extra_context or {})
         })
+        return context
+
+# Added contact form to PasswordResetView
+class myPasswordResetView(myPasswordContextMixin, FormView):
+    email_template_name = 'registration/password_reset_email.html'
+    extra_email_context = None
+    form_class = PasswordResetForm
+    from_email = None
+    html_email_template_name = None
+    subject_template_name = 'registration/password_reset_subject.txt'
+    success_url = reverse_lazy('password_reset_done')
+    template_name = 'registration/password_reset_form.html'
+    title = _('Password reset')
+    token_generator = default_token_generator
+
+    @method_decorator(csrf_protect)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def form_valid(self, form):
+        opts = {
+            'use_https': self.request.is_secure(),
+            'token_generator': self.token_generator,
+            'from_email': self.from_email,
+            'email_template_name': self.email_template_name,
+            'subject_template_name': self.subject_template_name,
+            'request': self.request,
+            'html_email_template_name': self.html_email_template_name,
+            'extra_email_context': self.extra_email_context,
+        }
+        form.save(**opts)
+        return super().form_valid(form)
+
+
+INTERNAL_RESET_SESSION_TOKEN = '_password_reset_token'
+
+# Added contact form to PasswordResetDoneView
+class myPasswordResetDoneView(myPasswordContextMixin, TemplateView):
+    template_name = 'registration/password_reset_done.html'
+    title = _('Password reset sent')
+
+UserModel = get_user_model()
+
+# Added contact form to PasswordResetConfirmView
+class myPasswordResetConfirmView(myPasswordContextMixin, FormView):
+    form_class = SetPasswordForm
+    post_reset_login = False
+    post_reset_login_backend = None
+    reset_url_token = 'set-password'
+    success_url = reverse_lazy('password_reset_complete')
+    template_name = 'registration/password_reset_confirm.html'
+    title = _('Enter new password')
+    token_generator = default_token_generator
+
+    @method_decorator(sensitive_post_parameters())
+    @method_decorator(never_cache)
+    def dispatch(self, *args, **kwargs):
+        assert 'uidb64' in kwargs and 'token' in kwargs
+
+        self.validlink = False
+        self.user = self.get_user(kwargs['uidb64'])
+
+        if self.user is not None:
+            token = kwargs['token']
+            if token == self.reset_url_token:
+                session_token = self.request.session.get(INTERNAL_RESET_SESSION_TOKEN)
+                if self.token_generator.check_token(self.user, session_token):
+                    # If the token is valid, display the password reset form.
+                    self.validlink = True
+                    return super().dispatch(*args, **kwargs)
+            else:
+                if self.token_generator.check_token(self.user, token):
+                    # Store the token in the session and redirect to the
+                    # password reset form at a URL without the token. That
+                    # avoids the possibility of leaking the token in the
+                    # HTTP Referer header.
+                    self.request.session[INTERNAL_RESET_SESSION_TOKEN] = token
+                    redirect_url = self.request.path.replace(token, self.reset_url_token)
+                    return HttpResponseRedirect(redirect_url)
+
+        # Display the "Password reset unsuccessful" page.
+        return self.render_to_response(self.get_context_data())
+
+    def get_user(self, uidb64):
+        try:
+            # urlsafe_base64_decode() decodes to bytestring
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = UserModel._default_manager.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, UserModel.DoesNotExist, ValidationError):
+            user = None
+        return user
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.user
+        return kwargs
+
+    def form_valid(self, form):
+        user = form.save()
+        del self.request.session[INTERNAL_RESET_SESSION_TOKEN]
+        if self.post_reset_login:
+            auth_login(self.request, user, self.post_reset_login_backend)
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.validlink:
+            context['validlink'] = True
+        else:
+            context.update({
+                'form': None,
+                'title': _('Password reset unsuccessful'),
+                'validlink': False,
+            })
         return context

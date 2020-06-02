@@ -134,7 +134,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 LOGIN_REDIRECT_URL = 'index'
-LOGOUT_REDIRECT_URL='index'
+LOGOUT_REDIRECT_URL = 'index'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
